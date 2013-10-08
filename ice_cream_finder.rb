@@ -2,6 +2,7 @@ require 'addressable/uri'
 require 'json'
 require "rest-client"
 require_relative "./server_api"
+require 'nokogiri'
 
 
 class IceCreamFinder
@@ -32,7 +33,7 @@ class IceCreamFinder
     [lat, long]
   end
 
-  def find_ice_cream
+  def find_ice_cream(radius = 1000)
     # https://maps.googleapis.com/maps/api/place/nearbysearch/output?parameters
     uri = Addressable::URI.new(
     :scheme => "https",
@@ -40,12 +41,62 @@ class IceCreamFinder
     :path => "maps/api/place/nearbysearch/json",
     :query_values => { :key => get_key,
       :location => "#{latitude},#{longitude}",
-      :rankby => :distance,
-      :sensor => false
+      :radius => radius,
+      :sensor => false,
+      :keyword => "ice cream"
       }
     ).to_s
 
-    puts uri
+    json = RestClient.get(uri)
+    location = JSON.parse(json)
+
+    results = location["results"]
+    prints_results(results)
+  end
+
+  def prints_results(results)
+    results.each do |result|
+      puts result["name"]
+      location = result["geometry"]["location"]
+      get_directions(location["lat"],location["lng"])
+    end
+  end
+
+  def get_directions(lat, long)
+    uri = Addressable::URI.new(
+    :scheme => "http",
+    :host => "maps.googleapis.com",
+    :path => "maps/api/directions/json",
+    :query_values => { :origin => "#{latitude},#{longitude}",
+                       :destination => "#{lat},#{long}",
+                       :sensor => false,
+                       :mode => :walking
+                     }
+    ).to_s
+
+    json = RestClient.get(uri)
+    results = JSON.parse(json)
+
+    if results["status"] == "OK"
+      prints_directions(results["routes"])
+    else
+      puts results["status"]
+    end
+  end
+
+  def prints_directions(routes)
+    routes.each_with_index do |route, index|
+      puts "Route #{index + 1}"
+      route["legs"].each_with_index do |leg, index|
+        puts "  Leg #{index + 1}"
+
+        leg["steps"].each_with_index do |step, index|
+          puts "    Step #{index + 1}"
+          parsed_html = Nokogiri::HTML(step["html_instructions"])
+          puts "      #{parsed_html.text}"
+        end
+      end
+    end
   end
 end
 
