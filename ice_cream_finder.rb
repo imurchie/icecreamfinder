@@ -7,22 +7,29 @@ require_relative "./server_api"
 class IceCreamFinder
   include APIKey
 
-  attr_reader :latitude, :longitude
+  attr_reader :address, :latitude, :longitude
 
   def initialize(address)
+    @address = address
+
+    @latitude, @longitude = get_current_location
+  end
+
+  def get_current_location
     @base_uri = Addressable::URI.new(
       :scheme => "http",
       :host => "maps.googleapis.com",
       :path => "maps/api/geocode/json",
       :query_values => { :address => address, :sensor => false }
       ).to_s
-  end
 
-  def get_current_location
     json = RestClient.get(@base_uri)
-    @latitude, @longitude = get_location(JSON.parse(json))
+    location = JSON.parse(json)["results"].first["geometry"]["location"]
 
-    self
+    lat = location["lat"]
+    long = location["lng"]
+
+    [lat, long]
   end
 
   def find_ice_cream
@@ -40,18 +47,7 @@ class IceCreamFinder
 
     puts uri
   end
-
-
-  private
-    def get_location(json)
-      location = json["results"].first["geometry"]["location"]
-
-      lat = location["lat"]
-      long = location["lng"]
-
-      [lat, long]
-    end
 end
 
 icf = IceCreamFinder.new("1061 Market St, San Francisco CA")
-icf.get_current_location.find_ice_cream
+icf.find_ice_cream
