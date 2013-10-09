@@ -7,22 +7,24 @@ Usage:
 
 Create a file "api_key.rb" in which you have a module `APIKey`:
 
-        ```ruby
-        module APIKey
-          def get_key
-            # enter your Google API key
-          end
-        end
-        ```
+```ruby
+module APIKey
+  def get_key
+    # enter your Google API key
+  end
+end
+```
 
-        ```ruby
-        require "ice_cream_finder"
+Then instantiate with a location, and call `IceCreamFinder#find_ice_cream`:
+
+```ruby
+require "ice_cream_finder"
         
-        location = "1600 Pennsylvania Ave NW, Washington, D.C."
-        icf = IceCreamFinder.new(location)
-        icf.find_ice_cream
+location = "1600 Pennsylvania Ave NW, Washington, D.C."
+icf = IceCreamFinder.new(location)
+icf.find_ice_cream
         
-        # or with a radius, in meters
-        icf.find_ice_cream(10)
-        ```
+# or with a radius, in meters
+icf.find_ice_cream(10)
+```
 
