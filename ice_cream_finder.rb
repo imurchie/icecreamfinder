@@ -100,5 +100,9 @@ class IceCreamFinder
   end
 end
 
-icf = IceCreamFinder.new("1061 Market St, San Francisco CA")
-icf.find_ice_cream
+if $PROGRAM_NAME == __FILE__
+  print "Enter current location: "
+  location = gets.chomp
+  icf = IceCreamFinder.new(location)
+  icf.find_ice_cream
+end
